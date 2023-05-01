@@ -8,11 +8,9 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 from utils import *
-# from models import *
 from dataloader import prepare_data
 from metalearner import MetaLearner
 from learner import Learner
-from utils import *
 from tqdm import tqdm
 
 
@@ -26,15 +24,11 @@ def parse_args():
 
     # Hyperparameters
     parser.add_argument('--num_shot', default=1, type=int, help='number of support examples per class for train')
-    # parser.add_argument('--n-shot', type=int, help="How many examples per class for training (k, n_support)")
     parser.add_argument('--num_eval', default=15, type=int, help='number of query examples per class for eval')
-    # parser.add_argument('--n-eval', type=int, help="How many examples per class for evaluation (n_query)")
     parser.add_argument('--num_class', default=5, type=int, help='number of classes per episode')
-    # parser.add_argument('--n-class', type=int, help="How many classes (N, n_way)")
     parser.add_argument('--input_size', default=128, type=int, help='input size of initial meta-learner')
-    # parser.add_argument('--input-size', type=int, help="Input size for the first LSTM")
     parser.add_argument('--hidden_size', default=40, type=int, help='hidden size of meta-learner')
-    # parser.add_argument('--hidden-size', type=int, help="Hidden size for the first LSTM")
+    
     parser.add_argument('--lr', type=float, help="learning rate")
     parser.add_argument('--episode', type=int, help="number of episodes for train")
     parser.add_argument('--episode_val', type=int, help="number of episodes for eval")
@@ -99,7 +93,7 @@ def set_device(args):
 
 
 def initialize_logger(args):
-    logger = GOATLogger(args)
+    logger = CustomLogger(args)
     return logger
 
 
@@ -189,9 +183,9 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     if args.resume:
-        logger.loginfo("Resuming from checkpoint: {}".format(args.resume))
+        logger.log_info("Resuming from checkpoint: {}".format(args.resume))
         last_eps, metalearner, optimizer = resume_ckpt(metalearner, optimizer, args.resume, args.device)
-        logger.loginfo("Resumed from checkpoint: {}".format(args.resume))
+        logger.log_info("Resumed from checkpoint: {}".format(args.resume))
     
     # Train metalearner
     best_acc = 0.0
@@ -226,10 +220,10 @@ def main():
             acc = meta_test(episode, val_loader, learner_w_grad, learner_wo_grad, metalearner, args, logger)
             if acc > best_acc:
                 best_acc = acc
-                logger.loginfo("* Best accuracy so far *\n")
+                logger.log_info("* Best accuracy so far *\n")
 
 
-    logger.loginfo("Done")
+    logger.log_info("Done")
 
 if __name__ == '__main__':
     main()

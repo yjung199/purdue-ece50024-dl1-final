@@ -155,9 +155,9 @@ cython_debug/
 /data
 
 
-utils.py
+
 scripts/eval_5s_5c.sh
 scripts/train_5s_5c.sh
-metalearner.py
-learner.py
-dataloader.py
+learner1.py
+
+/logs-*
