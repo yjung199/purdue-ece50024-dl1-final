@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 class MetaLSTMCell(nn.Module):
-    def __init__(self, input_size=20, hidden_size=1, n_learner_params=0):
+    def __init__(self, input_size, hidden_size, n_learner_params):
         super().__init__()
         # Parameter abbr. from https://github.com/twitter-research/meta-learning-lstm
         self.input_size = input_size
