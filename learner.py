@@ -39,9 +39,9 @@ class Learner(nn.Module):
             nn.MaxPool2d(kernel_size=2)
         )})
 
-        clr_in = image_size // 2**4
+        fin_size = image_size // (2*2*2*2)
         # Define the final linear layer
-        self.model.update({'lin': nn.Linear(in_features=32 * clr_in * clr_in, out_features=num_classes)}) 
+        self.model.update({'lin': nn.Linear(in_features=32 * fin_size * fin_size, out_features=num_classes)}) 
         
         # Define the softmax layer
         # self.model.update({'sft': nn.Softmax(dim=1)}) 
