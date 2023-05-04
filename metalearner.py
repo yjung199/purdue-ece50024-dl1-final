@@ -4,9 +4,9 @@ import torch
 import torch.nn as nn
 
 class MetaLSTMCell(nn.Module):
-    """C_t = f_t * C_{t-1} + i_t * \tilde{C_t}"""
     def __init__(self, input_size=20, hidden_size=1, n_learner_params=0):
         super().__init__()
+        # Abbr. from https://github.com/twitter-research/meta-learning-lstm
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.n_learner_params = n_learner_params

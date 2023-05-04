@@ -60,8 +60,6 @@ class CustomLogger:
                 self.log_info(
                     f"[{kwargs['eps']:5d}/{kwargs['totaleps']:5d}] loss: {kwargs['loss']:6.4f} ({loss_mean:6.4f}), acc: {kwargs['acc']:6.3f}% ({acc_mean:6.3f}%)"
                     )
-                # self.log_info("[{:5d}/{:5d}] loss: {:6.4f} ({:6.4f}), acc: {:6.3f}% ({:6.3f}%)".format(\
-                #     kwargs['eps'], kwargs['totaleps'], kwargs['loss'], loss_mean, kwargs['acc'], acc_mean))
 
         elif kwargs['phase'] == 'eval':
             self.stats['eval']['loss'].append(kwargs['loss'])
@@ -73,7 +71,7 @@ class CustomLogger:
             acc_mean = np.mean(self.stats['eval']['acc'])
             acc_std = np.std(self.stats['eval']['acc'])
             self.log_info(
-                f"[{kwargs['eps']:5d}] Eval ({kwargs['totaleps']:3d} episode) - loss: {loss_mean:6.4f} +- {loss_std:6.4f}, acc: {acc_mean:6.3f} +- {acc_std:5.3f}%"
+                f"[{kwargs['eps']:5d}] Eval ({kwargs['totaleps']:3d} episode) :: loss: {loss_mean:6.4f} (std) {loss_std:6.4f}, acc: {acc_mean:6.3f} (std) {acc_std:5.3f}"
                 )
 
             self.reset()
@@ -81,53 +79,7 @@ class CustomLogger:
 
         else:
             raise ValueError("phase {} not supported".format(kwargs['phase']))
-        
-
-    # def batch_info(self, **kwargs):
-    #     phase = kwargs["phase"]
-
-    #     if phase == "train":
-
-    #         totaleps = kwargs["totaleps"]
-    #         loss = kwargs["loss"]
-    #         acc = kwargs["acc"]
-    #         eps = kwargs["eps"]
-    #         self.stats["train"]["loss"].append(loss)
-    #         self.stats["train"]["acc"].append(acc)
-
-
-    #         if eps % self.log_freq == 0 and eps != 0:
-    #             loss_mean = np.mean(self.stats["train"]["loss"])
-    #             acc_mean = np.mean(self.stats["train"]["acc"])
-    #             self.log_info(
-    #                 f"[{eps:5d}/{totaleps:5d}] loss: {loss:6.4f} ({loss_mean:6.4f}), acc: {acc:6.3f}% ({acc_mean:6.3f}%)"
-    #             )
-
-    #     elif phase == "eval":
-    #         totaleps = kwargs["totaleps"]
-    #         loss = kwargs["loss"]
-    #         acc = kwargs["acc"]
-    #         eps = kwargs["eps"]
-    #         self.stats["eval"]["loss"].append(loss)
-    #         self.stats["eval"]["acc"].append(acc)
-
-    #     elif phase == "evaldone":
-    #         totaleps = kwargs["totaleps"]
-    #         loss = kwargs["loss"]
-    #         acc = kwargs["acc"]
-    #         eps = kwargs["eps"]
-    #         loss_mean = np.mean(self.stats["eval"]["loss"])
-    #         loss_std = np.std(self.stats["eval"]["loss"])
-    #         acc_mean = np.mean(self.stats["eval"]["acc"])
-    #         acc_std = np.std(self.stats["eval"]["acc"])
-    #         self.log_info(
-    #             f"[{eps:5d}] Eval ({totaleps:3d} episode) - loss: {loss_mean:6.4f} +- {loss_std:6.4f}, acc: {acc_mean:6.3f} +- {acc_std:5.3f}%"
-    #         )
-    #         self.reset()
-    #         return acc_mean
-
-    #     else:
-    #         raise ValueError(f"phase {phase} not supported")
+    
     
     def log_info(self, strout):
         logging.info(strout)

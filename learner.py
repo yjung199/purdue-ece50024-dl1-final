@@ -10,63 +10,57 @@ import numpy as np
 
 class Learner(nn.Module):
 
-    def __init__(self, image_size, bn_eps, bn_momentum, n_classes):
+    def __init__(self, image_size, bn_eps, bn_momentum, num_classes):
         super(Learner, self).__init__()
-        self.model = nn.ModuleDict({'features': nn.Sequential(OrderedDict([
-            ('conv1', nn.Conv2d(3, 32, 3, padding=1)),
-            ('norm1', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu1', nn.ReLU(inplace=False)),
-            ('pool1', nn.MaxPool2d(2)),
 
-            ('conv2', nn.Conv2d(32, 32, 3, padding=1)),
-            ('norm2', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu2', nn.ReLU(inplace=False)),
-            ('pool2', nn.MaxPool2d(2)),
-
-            ('drop1', nn.Dropout2d(0.25)),
-
-            ('conv3', nn.Conv2d(32, 32, 3, padding=1)),
-            ('norm3', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu3', nn.ReLU(inplace=False)),
-            ('pool3', nn.MaxPool2d(2)),
-
-            ('drop2', nn.Dropout2d(0.25)),
-
-            ('conv4', nn.Conv2d(32, 32, 3, padding=1)),
-            ('norm4', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu4', nn.ReLU(inplace=False)),
-            ('pool4', nn.MaxPool2d(2)),
-
-            ('drop3', nn.Dropout2d(0.25)),
+        self.model = nn.ModuleDict({'features': nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=32, eps=bn_eps, momentum=bn_momentum),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.2),
+            nn.MaxPool2d(kernel_size=2),
             
-            ('conv5', nn.Conv2d(32, 32, 3, padding=1)),
-            ('norm5', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu5', nn.ReLU(inplace=False)),
-            ('pool5', nn.MaxPool2d(2)),
-
-            ('drop4', nn.Dropout2d(0.25)),
-
-            ('conv6', nn.Conv2d(32, 32, 3, padding=1)),
-            ('norm6', nn.BatchNorm2d(32, bn_eps, bn_momentum)),
-            ('relu6', nn.ReLU(inplace=False)),
-            ('pool6', nn.MaxPool2d(2)),
-
-            ]))
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=32, eps=bn_eps, momentum=bn_momentum),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.2),
+            nn.MaxPool2d(kernel_size=2),
             
-        })
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=32, eps=bn_eps, momentum=bn_momentum),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.2),
+            nn.MaxPool2d(kernel_size=2),
+            
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_features=32, eps=bn_eps, momentum=bn_momentum),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.2),
+            nn.MaxPool2d(kernel_size=2)
+        )})
 
         clr_in = image_size // 2**4
-        # self.model.update({'cls': nn.Linear(32 * clr_in * clr_in, n_classes)})
-        self.model.update({'cls': nn.Softmax(dim=1)})
+        # Define the final linear layer
+        self.model.update({'lin': nn.Linear(in_features=32 * clr_in * clr_in, out_features=num_classes)}) 
+        
+        # Define the softmax layer
+        # self.model.update({'sft': nn.Softmax(dim=1)}) 
+        
+        # Define the cross-entropy loss function
         self.criterion = nn.CrossEntropyLoss()
 
-    def forward(self, x):
+    def forward(self, x, labels=None):
+        # Pass the input through the CNN layers
         x = self.model.features(x)
-        x = torch.reshape(x, [x.size(0), -1])
-        # print('x.shape: ', x.shape)
-        outputs = self.model.cls(x)
-        # print('outputs.shape :', outputs.shape)
-        return outputs
+        
+        # Flatten the output
+        x = x.view(x.size(0), -1)
+        
+        # Pass the output through the final linear layer and the softmax layer
+        x = self.model.lin(x)
+        # x = self.model.sft(x)
+
+        return x
 
     def get_flat_params(self):
         return torch.cat([p.view(-1) for p in self.model.parameters()], 0)
@@ -79,10 +73,8 @@ class Learner(nn.Module):
             idx += plen
 
     def transfer_params(self, learner_w_grad, cI):
-        # Use load_state_dict only to copy the running mean/var in batchnorm, the values of the parameters
-        #  are going to be replaced by cI
         self.load_state_dict(learner_w_grad.state_dict())
-        #  replace nn.Parameters with tensors from cI (NOT nn.Parameters anymore).
+        
         idx = 0
         for m in self.model.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.Linear):
