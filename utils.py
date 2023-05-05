@@ -7,14 +7,14 @@ import torch
 
 class CustomLogger:
     def __init__(self, args):
-        args.save = f"{args.save}-{args.seed}"
+        args.save = f"{args.save}_{args.seed}"
         self.mode = args.mode
         self.save_root = args.save
         self.log_freq = args.log_freq
 
         if self.mode == "train":
             os.makedirs(self.save_root, exist_ok=True)
-            filename = os.path.join(self.save_root, "console.log")
+            filename = os.path.join(self.save_root, f"log_{args.seed}.log")
             logging.basicConfig(
                 level=logging.DEBUG,
                 format="%(asctime)s.%(msecs)03d - %(message)s",

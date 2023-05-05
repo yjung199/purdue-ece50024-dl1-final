@@ -18,19 +18,25 @@ Pytorch replication study of [Optimization as a Model for Few-shot Learning](htt
 - Check out `scripts/train_5s_5c`, make sure `--data_root` is properly set
 
 ## Run
+The script to train and test the model is provided. (Beware that for Linux, I made .sh file but didn't test it.)
+
 To train the model for 5-shot, 5-class, run
 ```bash
 # For Windows
-scripts/train_5s_5c.ps1
+scripts/train-5-shot-5-class
+# For Linux
+bash scripts/train-5-shot-5-class
 ```
 to run 5-shot, 5-class training. 
 
 To evaluate, run 
 ```bash
 # For Windows
-scripts/eval_5s_5c.ps1
+scripts/test-5-shot-5-class
+# For Linux
+bash scripts/test-5-shot-5-class
 ```
-Remember to change `--resume` and `--seed` arguments in the file.
+When evaluating, remember to change `--resume` and `--seed` arguments in the file.
 
 ## Development Environment
 - Windows 10 Pro 64-bit (10.0, Build 19042)
@@ -41,5 +47,5 @@ Remember to change `--resume` and `--seed` arguments in the file.
 
 ## References
 - [CloserLookFewShot](https://github.com/wyharveychen/CloserLookFewShot) (Data loader)
-- [meta-learning-lstm](https://github.com/twitter/meta-learning-lstm) (Author's repo in Lua Torch)
+- [meta-learning-lstm](https://github.com/twitter/meta-learning-lstm) (Author's repo in Lua)
 

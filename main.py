@@ -9,8 +9,8 @@ import torch.nn as nn
 import torch.utils.data as data
 from utils import *
 from dataloader import prepare_data
-from metalearner import MetaLearner
-from learner import Learner
+from meta_learner import MetaLearner
+from lstm_learner import Learner
 from tqdm import tqdm
 
 
@@ -53,28 +53,6 @@ def parse_args():
     parser.add_argument('--log_freq', type=int, default=100, help="logging frequency")
     parser.add_argument('--val_freq', type=int, default=1000, help="validation frequency")
     parser.add_argument('--seed', type=int, help="random seed")
-
-    # args = parser.parse_args()
-
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--mode', default='train', help='train or test')
-    # parser.add_argument('--dataset', default='miniimagenet', help='name of dataset')
-    # parser.add_argument('--data_root', default='./data', help='path to dataset')
-    # parser.add_argument('--save', default='./checkpoints', help='path to save checkpoints')
-    # parser.add_argument('--log', default='./logs', help='path to save logs')
-    # parser.add_argument('--resume', default='', help='path to checkpoint')
-    # parser.add_argument('--episode', default=60000, type=int, help='number of episodes')
-    # parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-    # parser.add_argument('--bn_eps', default=1e-3, type=float, help='batchnorm epsilon')
-    # parser.add_argument('--bn_momentum', default=0.05, type=float, help='batchnorm momentum')
-    # parser.add_argument('--grad_clip', default=1.0, type=float, help='gradient clipping')
-    
-    # parser.add_argument('--image_size', default=28, type=int, help='image size')
-    
-    
-    # parser.add_argument('--seed', default=None, type=int, help='random seed')
-    # parser.add_argument('--cpu', action='store_true', help='use cpu')
-    # parser.add_argument('--val_freq', default=2000, type=int, help='validation frequency')
     
     return parser
     
