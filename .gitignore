@@ -155,10 +155,5 @@ cython_debug/
 /data
 
 
-
-scripts/eval_5s_5c.sh
-scripts/train_5s_5c.sh
-learner1.py
-
 /logs-*
 /logs_*

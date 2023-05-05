@@ -7,7 +7,7 @@ Pytorch replication study of [Optimization as a Model for Few-shot Learning](htt
 - Conda environment (yml file downloadable from [here](https://purdue0-my.sharepoint.com/:u:/g/personal/jung199_purdue_edu/EXcelSEWGo5Gt4291iTlEEIBxClTEeZarKbU1vMNkBic6w?e=4ozDQC))
   - Use `conda env create -f environment.yml` to create the environment
 
-## Data
+## Dataset
 - MiniImagenet as described in the original paper. 
   - Downloadable from [here](https://purdue0-my.sharepoint.com/:u:/g/personal/jung199_purdue_edu/EdI7dATMbHVNp7QILyhn5YsB3i3BHq6glKEOYOZblTTzpw?e=Adbwus) (~2.51GB, One drive link)
   - Put it directly under the root directory of this repo.
@@ -18,7 +18,7 @@ Pytorch replication study of [Optimization as a Model for Few-shot Learning](htt
 - Check out `scripts/train_5s_5c`, make sure `--data_root` is properly set
 
 ## Run
-The script to train and test the model is provided. (Beware that for Linux, I made .sh file but didn't test it.)
+The script to train and test the model is provided. (Beware that for Linux, I made .sh file but it is untested.)
 
 To train the model for 5-shot, 5-class, run
 ```bash
