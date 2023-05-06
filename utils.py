@@ -27,7 +27,7 @@ class CustomLogger:
             console.setFormatter(logging.Formatter("%(message)s"))
             logging.getLogger("").addHandler(console)
 
-            logging.info(f"Logger created at {filename}")
+            logging.info(f"Log file path: {filename}")
         else:
             logging.basicConfig(
                 level=logging.INFO,
@@ -58,7 +58,8 @@ class CustomLogger:
                 loss_mean = np.mean(self.stats['train']['loss'])
                 acc_mean = np.mean(self.stats['train']['acc'])
                 self.log_info(
-                    f"[{kwargs['eps']:5d}/{kwargs['totaleps']:5d}] loss: {kwargs['loss']:6.4f} ({loss_mean:6.4f}), acc: {kwargs['acc']:6.3f}% ({acc_mean:6.3f}%)"
+                    
+                    f"[{kwargs['eps']:5d}/{kwargs['totaleps']:5d}] loss: {kwargs['loss']:6.4f}  eps_loss: {loss_mean:6.4f}, acc: {kwargs['acc']:6.3f}%  eps_acc: {acc_mean:6.3f}%"
                     )
 
         elif kwargs['phase'] == 'eval':
@@ -71,14 +72,14 @@ class CustomLogger:
             acc_mean = np.mean(self.stats['eval']['acc'])
             acc_std = np.std(self.stats['eval']['acc'])
             self.log_info(
-                f"[{kwargs['eps']:5d}] Eval ({kwargs['totaleps']:3d} episode) :: loss: {loss_mean:6.4f} (std) {loss_std:6.4f}, acc: {acc_mean:6.3f} (std) {acc_std:5.3f}"
+                f"[{kwargs['eps']:5d} Eval ({kwargs['totaleps']:3d} episode)] loss: {loss_mean:6.4f} (std) {loss_std:6.4f}, acc: {acc_mean:6.3f} (std) {acc_std:5.3f}"
                 )
 
             self.reset()
             return acc_mean
 
         else:
-            raise ValueError("phase {} not supported".format(kwargs['phase']))
+            raise ValueError("Phase {} not supported".format(kwargs['phase']))
     
     
     def log_info(self, strout):
@@ -121,7 +122,7 @@ def preprocess_grad_loss(x):
     indicator = (x.abs() >= np.exp(-p)).to(x.dtype)
 
     # preproc1
-    x_proc1 = indicator * torch.log(x.abs() + 1e-8) / p + (1 - indicator) * -1
+    proc1 = indicator * torch.log(x.abs() + 1e-8) / p + (1 - indicator) * -1
     # preproc2
-    x_proc2 = indicator * torch.sign(x) + (1 - indicator) * np.exp(p) * x
-    return torch.stack((x_proc1, x_proc2), dim=1)
+    proc2 = indicator * torch.sign(x) + (1 - indicator) * np.exp(p) * x
+    return torch.stack((proc1, proc2), dim=1)

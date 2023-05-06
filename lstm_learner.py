@@ -62,18 +62,18 @@ class Learner(nn.Module):
 
         return x
 
-    def get_flat_params(self):
+    def get_param_learnenr(self):
         return torch.cat([p.view(-1) for p in self.model.parameters()], 0)
 
-    def copy_flat_params(self, cI):
+    def copy_param_learnenr(self, cI):
         idx = 0
         for p in self.model.parameters():
-            plen = p.view(-1).size(0)
-            p.data.copy_(cI[idx: idx+plen].view_as(p))
-            idx += plen
+            w = p.view(-1).size(0)
+            p.data.copy_(cI[idx: idx+w].view_as(p))
+            idx += w
 
-    def transfer_params(self, learner_w_grad, cI):
-        self.load_state_dict(learner_w_grad.state_dict())
+    def transfer_params(self, learner_grad, cI):
+        self.load_state_dict(learner_grad.state_dict())
         
         idx = 0
         for m in self.model.modules():
@@ -86,7 +86,7 @@ class Learner(nn.Module):
                     m._parameters['bias'] = cI[idx: idx+blen].view_as(m._parameters['bias']).clone()
                     idx += blen
 
-    def reset_batch_stats(self):
+    def reset(self):
         for m in self.modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.reset_running_stats()

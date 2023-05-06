@@ -81,13 +81,13 @@ def get_data_loaders(args):
 
 
 def setup_learners_and_metalearner(args, device):
-    learner_w_grad = Learner(args.image_size, args.bn_eps, args.bn_momentum, args.num_class).to(device)
-    learner_wo_grad = copy.deepcopy(learner_w_grad)
-    metalearner = MetaLearner(args.input_size, args.hidden_size, learner_w_grad.get_flat_params().size(0)).to(device)
-    metalearner.metalstm.init_cI(learner_w_grad.get_flat_params())
-    return learner_w_grad, learner_wo_grad, metalearner
+    learner_grad = Learner(args.image_size, args.bn_eps, args.bn_momentum, args.num_class).to(device)
+    learner_no_grad = copy.deepcopy(learner_grad)
+    metalearner = MetaLearner(args.input_size, args.hidden_size, learner_grad.get_param_learnenr().size(0)).to(device)
+    metalearner.metalstm.init_cI(learner_grad.get_param_learnenr())
+    return learner_grad, learner_no_grad, metalearner
 
-def train_learner(learner_w_grad, metalearner, train_input, train_target, args):
+def train_learner(learner_grad, metalearner, train_input, train_target, args):
     cI = metalearner.metalstm.cI.data
     hs = [None]
     for _ in range(args.epoch):
@@ -96,13 +96,13 @@ def train_learner(learner_w_grad, metalearner, train_input, train_target, args):
             y = train_target[i:i+args.batch_size]
 
             # get the loss/grad
-            learner_w_grad.copy_flat_params(cI)
-            output = learner_w_grad(x)
-            loss = learner_w_grad.criterion(output, y)
+            learner_grad.copy_param_learnenr(cI)
+            output = learner_grad(x)
+            loss = learner_grad.criterion(output, y)
             acc = accuracy(output, y)
-            learner_w_grad.zero_grad()
+            learner_grad.zero_grad()
             loss.backward()
-            grad = torch.cat([p.grad.data.view(-1) / args.batch_size for p in learner_w_grad.parameters()], 0)
+            grad = torch.cat([p.grad.data.view(-1) / args.batch_size for p in learner_grad.parameters()], 0)
 
             # preprocess grad & loss and metalearner forward
             grad_prep = preprocess_grad_loss(grad)  # [n_learner_params, 2]
@@ -115,7 +115,7 @@ def train_learner(learner_w_grad, metalearner, train_input, train_target, args):
 
     return cI
 
-def meta_test(episode, eval_loader, learner_w_grad, learner_wo_grad, metalearner, args, logger):
+def meta_test(episode, eval_loader, learner_grad, learner_no_grad, metalearner, args, logger):
     for subeps, (episode_x, episode_y) in enumerate(tqdm(eval_loader, ascii=True)):
         train_input = episode_x[:, :args.num_shot].reshape(-1, *episode_x.shape[-3:]).to(args.device) # [num_class * num_shot, :]
         train_target = torch.LongTensor(np.repeat(range(args.num_class), args.num_shot)).to(args.device) # [num_class * num_shot]
@@ -123,15 +123,15 @@ def meta_test(episode, eval_loader, learner_w_grad, learner_wo_grad, metalearner
         test_target = torch.LongTensor(np.repeat(range(args.num_class), args.num_eval)).to(args.device) # [num_class * num_eval]
 
         # Train learner with metalearner
-        learner_w_grad.reset_batch_stats()
-        learner_wo_grad.reset_batch_stats()
-        learner_w_grad.train()
-        learner_wo_grad.eval()
-        cI = train_learner(learner_w_grad, metalearner, train_input, train_target, args)
+        learner_grad.reset()
+        learner_no_grad.reset()
+        learner_grad.train()
+        learner_no_grad.eval()
+        cI = train_learner(learner_grad, metalearner, train_input, train_target, args)
 
-        learner_wo_grad.transfer_params(learner_w_grad, cI)
-        output = learner_wo_grad(test_input)
-        loss = learner_wo_grad.criterion(output, test_target)
+        learner_no_grad.transfer_params(learner_grad, cI)
+        output = learner_no_grad(test_input)
+        loss = learner_no_grad.criterion(output, test_target)
         acc = accuracy(output, test_target)
  
         logger.batch_info(loss=loss.item(), acc=acc, phase='eval')
@@ -154,7 +154,7 @@ def main():
     args.device = device
     logger = initialize_logger(args)
     train_loader, val_loader, test_loader = get_data_loaders(args)
-    learner_w_grad, learner_wo_grad, metalearner = setup_learners_and_metalearner(args, device)
+    learner_grad, learner_no_grad, metalearner = setup_learners_and_metalearner(args, device)
 
     # Set optimizer and loss function
     optimizer = torch.optim.Adam(metalearner.parameters(), lr=args.lr)
@@ -163,26 +163,26 @@ def main():
     if args.resume:
         logger.log_info("Resuming from checkpoint: {}".format(args.resume))
         last_eps, metalearner, optimizer = resume_ckpt(metalearner, optimizer, args.resume, args.device)
-        logger.log_info("Resumed from checkpoint: {}".format(args.resume))
+        
     
     # Train metalearner
     best_acc = 0.0
-    for episode, (eps_x, eps_y) in enumerate(train_loader):
+    for episode, (eps_x, _) in enumerate(train_loader):
         train_input = eps_x[:, :args.num_shot].reshape(-1, *eps_x.shape[-3:]).to(args.device) # [num_class * num_shot, :]
         train_target = torch.LongTensor(np.repeat(range(args.num_class), args.num_shot)).to(args.device) # [num_class * num_shot]
         test_input = eps_x[:, args.num_shot:].reshape(-1, *eps_x.shape[-3:]).to(args.device) # [num_class * num_eval, :]
         test_target = torch.LongTensor(np.repeat(range(args.num_class), args.num_eval)).to(args.device) # [num_class * num_eval]
 
         # Train learner with meta learner
-        learner_w_grad.reset_batch_stats()
-        learner_wo_grad.reset_batch_stats()
-        learner_w_grad.train()
-        learner_wo_grad.train()
-        cI = train_learner(learner_w_grad, metalearner, train_input, train_target, args)
+        learner_grad.reset()
+        learner_no_grad.reset()
+        learner_grad.train()
+        learner_no_grad.train()
+        cI = train_learner(learner_grad, metalearner, train_input, train_target, args)
 
-        learner_wo_grad.transfer_params(learner_w_grad, cI)
-        output = learner_wo_grad(test_input)
-        loss = learner_wo_grad.criterion(output, test_target)
+        learner_no_grad.transfer_params(learner_grad, cI)
+        output = learner_no_grad(test_input)
+        loss = learner_no_grad.criterion(output, test_target)
         acc = accuracy(output, test_target)
 
         optimizer.zero_grad()
@@ -195,13 +195,13 @@ def main():
         # Meta-validation
         if episode % args.val_freq == 0 and episode != 0:
             save_ckpt(episode, metalearner, optimizer, args.save)
-            acc = meta_test(episode, val_loader, learner_w_grad, learner_wo_grad, metalearner, args, logger)
+            acc = meta_test(episode, val_loader, learner_grad, learner_no_grad, metalearner, args, logger)
             if acc > best_acc:
                 best_acc = acc
                 logger.log_info("* Best accuracy so far *\n")
 
 
-    logger.log_info("Done")
+    logger.log_info("Finished!")
 
 if __name__ == '__main__':
     main()

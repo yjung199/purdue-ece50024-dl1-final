@@ -13,14 +13,13 @@ Pytorch replication study of [Optimization as a Model for Few-shot Learning](htt
   - Put it directly under the root directory of this repo.
 
 
-## Preparation
+## Prerequisites
 - Download the MiniImagenet and put it **directly under the root directory** of this proejct.
 - Check out `scripts/train_5s_5c`, make sure `--data_root` is properly set
 
-## Run
+## Train/Test the Model
 The script to train and test the model is provided. (Beware that for Linux, I made .sh file but it is untested.)
-
-To train the model for 5-shot, 5-class, run
+From the root directory of this project, run
 ```bash
 # For Windows
 scripts/train-5-shot-5-class
@@ -36,7 +35,7 @@ scripts/test-5-shot-5-class
 # For Linux
 bash scripts/test-5-shot-5-class
 ```
-When evaluating, remember to change `--resume` and `--seed` arguments in the file.
+Note: when evaluating, remember to change `--resume` and `--seed` arguments in the file.
 
 ## Development Environment
 - Windows 10 Pro 64-bit (10.0, Build 19042)

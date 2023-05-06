@@ -16,9 +16,9 @@ class MetaLSTMCell(nn.Module):
         self.bI = nn.Parameter(torch.Tensor(1, hidden_size))
         self.bF = nn.Parameter(torch.Tensor(1, hidden_size))
 
-        self.reset_parameters()
+        self._init_params()
 
-    def reset_parameters(self):
+    def _init_params(self):
         for weight in self.parameters():
             nn.init.uniform_(weight, -0.01, 0.01)
 
