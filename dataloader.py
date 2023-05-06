@@ -34,9 +34,6 @@ class EpisodeDataset(Dataset):
         self.labels = sorted(os.listdir(self.root))
         img_w_labels = [glob.glob(os.path.join(root, label, '*')) for label in self.labels]
         self.episode_loader = [DataLoader(ClassDataset(glob.glob(os.path.join(self.root, label, '*')), idx, transform), batch_size=num_shot+num_eval, shuffle=True, num_workers=0) for idx, label in enumerate(self.labels)]
-        # self.episode_loader = [DataLoader(
-        #     ClassDataset(images=img_w_labels[idx], label=idx, transform=transform),
-        #     batch_size=num_shot+num_eval, shuffle=True, num_workers=0) for idx, _ in enumerate(self.labels)]
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         return next(iter(self.episode_loader[idx]))

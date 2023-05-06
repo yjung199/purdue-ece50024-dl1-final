@@ -13,7 +13,7 @@ class Learner(nn.Module):
     def __init__(self, image_size, bn_eps, bn_momentum, num_classes):
         super(Learner, self).__init__()
 
-        self.model = nn.ModuleDict({'features': nn.Sequential(
+        self.model = nn.ModuleDict({'feat': nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
             nn.BatchNorm2d(num_features=32, eps=bn_eps, momentum=bn_momentum),
             nn.ReLU(inplace=True),
@@ -39,6 +39,7 @@ class Learner(nn.Module):
             nn.MaxPool2d(kernel_size=2)
         )})
 
+        
         fin_size = image_size // (2*2*2*2)
         # Define the final linear layer
         self.model.update({'lin': nn.Linear(in_features=32 * fin_size * fin_size, out_features=num_classes)}) 
@@ -51,7 +52,7 @@ class Learner(nn.Module):
 
     def forward(self, x, labels=None):
         # Pass the input through the CNN layers
-        x = self.model.features(x)
+        x = self.model.feat(x)
         
         # Flatten the output
         x = x.view(x.size(0), -1)
@@ -68,9 +69,9 @@ class Learner(nn.Module):
     def copy_param_learnenr(self, cI):
         idx = 0
         for p in self.model.parameters():
-            w = p.view(-1).size(0)
-            p.data.copy_(cI[idx: idx+w].view_as(p))
-            idx += w
+            f_size = p.view(-1).size(0)
+            p.data.copy_(cI[idx: idx+f_size].view_as(p))
+            idx += f_size
 
     def transfer_params(self, learner_grad, cI):
         self.load_state_dict(learner_grad.state_dict())
@@ -78,13 +79,13 @@ class Learner(nn.Module):
         idx = 0
         for m in self.model.modules():
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.Linear):
-                wlen = m._parameters['weight'].view(-1).size(0)
-                m._parameters['weight'] = cI[idx: idx+wlen].view_as(m._parameters['weight']).clone()
-                idx += wlen
+                w_size = m._parameters['weight'].view(-1).size(0)
+                m._parameters['weight'] = cI[idx: idx+w_size].view_as(m._parameters['weight']).clone()
+                idx += w_size
                 if m._parameters['bias'] is not None:
-                    blen = m._parameters['bias'].view(-1).size(0)
-                    m._parameters['bias'] = cI[idx: idx+blen].view_as(m._parameters['bias']).clone()
-                    idx += blen
+                    bias_size = m._parameters['bias'].view(-1).size(0)
+                    m._parameters['bias'] = cI[idx: idx+bias_size].view_as(m._parameters['bias']).clone()
+                    idx += bias_size
 
     def reset(self):
         for m in self.modules():
