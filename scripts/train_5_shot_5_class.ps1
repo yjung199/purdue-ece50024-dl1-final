@@ -6,7 +6,7 @@
     [int]$inputSize = 4,
     [int]$hiddenSize = 20,
     [float]$lr = 0.001,
-    [int]$episode = 50000,
+    [int]$episode = 10000,
     [int]$episodeVal = 100,
     [int]$epoch = 8,
     [int]$batchSize = 25,
